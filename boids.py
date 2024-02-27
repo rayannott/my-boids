@@ -18,6 +18,10 @@ PERCEPTION_ANGLE = 2 * math.pi / 3
 SEPARATION = 30
 ALIGNMENT = 60
 COHESION = 70
+DO_NOT_SEPARATE_THRESHOLD = 5
+
+REPELL_FRIENDS_COEF = 10.
+REPELL_ENEMIES_COEF = 15.
 
 
 def random_vector() -> Vector2:
@@ -30,6 +34,7 @@ class EdgeBehavior(Enum):
     WRAP = auto()
     BOUNCE = auto()
     IGNORE = auto()
+    AVOID = auto() # steer away from the edge when too close
 
 
 @dataclass
@@ -37,6 +42,10 @@ class FollowRules:
     ALIGN: bool = True
     COHERE: bool = True
     SEPARATE: bool = True
+
+
+class GeneSequence:
+    ...
 
 
 @dataclass
@@ -53,6 +62,8 @@ class Boid:
     alignment: float = ALIGNMENT # distance at which the boid will start to align with other boids
     cohesion: float = COHESION # distance at which the boid will start to move towards other boids
     rule_flags: FollowRules = field(default_factory=FollowRules)
+
+    class_id: int = 0
 
     edge_behavior: EdgeBehavior = EdgeBehavior.WRAP
 
@@ -82,6 +93,8 @@ class Boid:
                 self.vel.x *= -1.01
             if self.pos.y < screen_rect.top or self.pos.y > screen_rect.bottom:
                 self.vel.y *= -1.01
+        elif self.edge_behavior == EdgeBehavior.AVOID:
+            raise NotImplementedError('EdgeBehavior.AVOID')
     
     def get_steering_acc(self, pos: Vector2) -> Vector2:
         desired = (pos - self.pos)
@@ -103,11 +116,17 @@ class Boid:
         align_accumulate_vel = Vector2()
         count_align = 0
         for boid in boids:
+            dist_to_boid_sq = (boid.pos - self.pos).magnitude_squared()
+            if self.class_id != boid.class_id:
+                if DO_NOT_SEPARATE_THRESHOLD ** 2 < dist_to_boid_sq:
+                    t = REPELL_ENEMIES_COEF / math.sqrt(dist_to_boid_sq)
+                    acc = (boid.pos - self.pos).normalize() * self.max_acc
+                    self.acc -= acc * t # repell enemies
+                continue
             center_of_mass += boid.pos
             count += 1
-            dist_to_boid_sq = (boid.pos - self.pos).magnitude_squared()
-            if 5 ** 2 < dist_to_boid_sq < self.separation ** 2:
-                t = 1. / (dist_to_boid_sq)**.3
+            if DO_NOT_SEPARATE_THRESHOLD ** 2 < dist_to_boid_sq < self.separation ** 2:
+                t = REPELL_FRIENDS_COEF / math.sqrt(dist_to_boid_sq)
                 acc = (boid.pos - self.pos).normalize() * self.max_acc
                 if self.rule_flags.SEPARATE:
                     self.acc -= acc * t # SEPARATE
