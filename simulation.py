@@ -1,3 +1,4 @@
+import random
 from typing import Iterator
 from copy import copy
 
@@ -5,7 +6,7 @@ import numpy as np
 from scipy.spatial import KDTree
 from pygame import Rect
 
-from boids import Boid, FollowRules
+from boids import Boid, FollowRules, EdgeBehavior
 from utils import random_screen_position
 
 
@@ -19,12 +20,17 @@ class Simulation:
     def add_boid(self, boid: Boid):
         self.boids.append(boid)
     
-    def add_n_random_boids(self, n: int):
+    def add_n_random_boids(self,
+            n: int, 
+            n_classes: int = 1,
+            edge_behavior: EdgeBehavior = EdgeBehavior.WRAP
+        ):
         for _ in range(n):
             self.add_boid(
                 Boid(
                     random_screen_position(self.screen_rect),
-                    # edge_behavior=random.choice([EdgeBehavior.WRAP, EdgeBehavior.BOUNCE])
+                    class_id=random.choice(list(range(n_classes))),
+                    edge_behavior=edge_behavior
                 )
             )
     
