@@ -87,11 +87,21 @@ class Boid:
                 self.pos.y = screen_rect.top
         elif self.edge_behavior == EdgeBehavior.BOUNCE:
             if self.pos.x < screen_rect.left or self.pos.x > screen_rect.right:
-                self.vel.x *= -1.01
+                self.vel.x *= -1 
             if self.pos.y < screen_rect.top or self.pos.y > screen_rect.bottom:
-                self.vel.y *= -1.01
+                self.vel.y *= -1
+            self.pos += self.vel
         elif self.edge_behavior == EdgeBehavior.AVOID:
-            raise NotImplementedError('EdgeBehavior.AVOID')
+            # raise NotImplementedError('EdgeBehavior.AVOID')
+            MARGIN = 150; ACC_MAGNITUDE = MAX_ACC * 3
+            if self.pos.x < screen_rect.left + MARGIN:
+                self.acc += Vector2(ACC_MAGNITUDE, 0)
+            elif self.pos.x > screen_rect.right - MARGIN:
+                self.acc += Vector2(-ACC_MAGNITUDE, 0)
+            if self.pos.y < screen_rect.top + MARGIN:
+                self.acc += Vector2(0, ACC_MAGNITUDE)
+            elif self.pos.y > screen_rect.bottom - MARGIN:
+                self.acc += Vector2(0, -ACC_MAGNITUDE)
     
     def get_steering_acc(self, pos: Vector2) -> Vector2:
         desired = (pos - self.pos)
@@ -131,7 +141,7 @@ class Boid:
             # this is the cohesion part
             center_of_mass /= count
             dist_to_com_sq = (center_of_mass - self.pos).magnitude_squared()
-            if self.separation ** 2 < dist_to_com_sq < self.cohesion ** 2:
+            if dist_to_com_sq < self.cohesion ** 2:
                 if self.rule_flags.COHERE:
                     self.steer(center_of_mass) # COHERE
         self.last_num_of_neighbors = count
