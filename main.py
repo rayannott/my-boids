@@ -7,33 +7,18 @@ from screen import Screen
 from boids import Boid, FollowRules
 from simulation import Simulation
 from gui_utils import ColorGradient, LIGHT_PURPLE, LIGHT_GREEN
+from utils import random_screen_position, current_mouse_position
 
 
 WHITE = Color('white')
 PURPLE_TO_GREEN = ColorGradient(LIGHT_PURPLE, LIGHT_GREEN)
 
 
-def random_screen_position(surface: Surface) -> Vector2:
-    return Vector2(
-        random.uniform(0, surface.get_width()),
-        random.uniform(0, surface.get_height())
-    )
-
-
-def current_mouse_position() -> Vector2:
-    return Vector2(pygame.mouse.get_pos())
-
 
 class SimulationScreen(Screen):
     def __init__(self, surface: pygame.Surface):
         self.simulation = Simulation(surface.get_rect())
-        for _ in range(300):
-            self.simulation.add_boid(
-                Boid(
-                    random_screen_position(surface),
-                    # edge_behavior=random.choice([EdgeBehavior.WRAP, EdgeBehavior.BOUNCE])
-                )
-            )
+        self.simulation.add_n_random_boids(300)
         super().__init__(surface)
         self.paused = False
         self.follow_rules = FollowRules()
@@ -78,8 +63,6 @@ class SimulationScreen(Screen):
                 self.simulation.speed_up_factor -= 0.05
             print(f'speedup: {self.simulation.speed_up_factor:.2f}')
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_p:
-                self.paused = not self.paused
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 if event.key == pygame.K_a:
                     self.follow_rules.ALIGN = not self.follow_rules.ALIGN
@@ -90,7 +73,12 @@ class SimulationScreen(Screen):
                 elif event.key == pygame.K_s:
                     self.follow_rules.SEPARATE = not self.follow_rules.SEPARATE
                     print('new follow rules:', self.follow_rules)
-                self.simulation.update_follow_rules(self.follow_rules)                
+                self.simulation.update_follow_rules(self.follow_rules)
+            else:
+                if event.key == pygame.K_p:
+                    self.paused = not self.paused
+                elif event.key == pygame.K_SPACE:
+                    self.simulation.add_n_random_boids(10)
     
 
 def main():

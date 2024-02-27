@@ -6,6 +6,7 @@ from scipy.spatial import KDTree
 from pygame import Rect
 
 from boids import Boid, FollowRules
+from utils import random_screen_position
 
 
 class Simulation:
@@ -17,6 +18,15 @@ class Simulation:
     
     def add_boid(self, boid: Boid):
         self.boids.append(boid)
+    
+    def add_n_random_boids(self, n: int):
+        for _ in range(n):
+            self.add_boid(
+                Boid(
+                    random_screen_position(self.screen_rect),
+                    # edge_behavior=random.choice([EdgeBehavior.WRAP, EdgeBehavior.BOUNCE])
+                )
+            )
     
     def update_follow_rules(self, follow_rules: FollowRules):
         for boid in self.boids:
