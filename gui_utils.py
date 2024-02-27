@@ -5,6 +5,7 @@ WHITE = Color('#ffffff')
 LIGHT_YELLOW = Color('#f7f2b9')
 LIGHT_GREEN = Color('#81F45F')
 LIGHT_PURPLE = Color('#915cfb')
+LIGHT_RED = Color('#f45f5f')
 
 
 class ColorGradient:

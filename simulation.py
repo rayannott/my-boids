@@ -4,7 +4,7 @@ from copy import copy
 
 import numpy as np
 from scipy.spatial import KDTree
-from pygame import Rect
+from pygame import Rect, Vector2
 
 from boids import Boid, FollowRules, EdgeBehavior
 from utils import random_screen_position
@@ -68,4 +68,7 @@ class Simulation:
             )
             for boid_id, neighbor in enumerate(neighbors)
         ]
-    
+
+    def get_neighbors_for_point(self, point: Vector2, radius: float) -> Iterator[Boid]:
+        return (self.boids[i]
+            for i in self.boids_tree.query_ball_point(np.array(point), radius, p=2.))

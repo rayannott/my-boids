@@ -5,10 +5,13 @@ from typing import Iterable
 
 from pygame import Vector2, Rect
 
+from utils import random_unit_vector
 
-def random_unit_vector() -> Vector2:
-    a = random.random() * 2 * math.pi
-    return Vector2(math.cos(a), math.sin(a))
+
+def random_vector() -> Vector2:
+    ruv = random_unit_vector()
+    ruv.scale_to_length(random.random() * MAX_SPEED)
+    return ruv
 
 
 MAX_SPEED = 450
@@ -16,20 +19,12 @@ MAX_ACC = 200
 
 SEPARATION = 30
 ALIGNMENT = 60
-COHESION = 70
-PERCEPTION = 85
+COHESION = 80
+PERCEPTION = 90
 PERCEPTION_ANGLE = 2 * math.pi / 3
-
-DO_NOT_SEPARATE_THRESHOLD = 5
 
 REPELL_FRIENDS_COEF = 8.
 REPELL_ENEMIES_COEF = 30.
-
-
-def random_vector() -> Vector2:
-    ruv = random_unit_vector()
-    ruv.scale_to_length(random.random() * MAX_SPEED)
-    return ruv
 
 
 class EdgeBehavior(Enum):
@@ -102,8 +97,7 @@ class Boid:
         desired = (pos - self.pos)
         desired.scale_to_length(self.max_speed)
         steering = desired - self.vel
-        if steering.magnitude_squared() > self.max_acc ** 2:
-            steering.scale_to_length(self.max_acc)
+        steering.scale_to_length(self.max_acc)
         return steering
 
     def steer(self, pos: Vector2):
@@ -111,30 +105,24 @@ class Boid:
     
     def avoid(self, pos: Vector2):
         self.acc -= self.get_steering_acc(pos)
-    
+
     def align_cohere_separate(self, boids: Iterable['Boid']):
-        center_of_mass = Vector2()
-        count = 0
-        align_accumulate_vel = Vector2()
-        count_align = 0
+        center_of_mass, count = Vector2(), 0
+        align_accumulate_vel, count_align = Vector2(), 0
         for boid in boids:
-            dist_to_boid_sq = (boid.pos - self.pos).magnitude_squared()
+            if boid is self: continue
+            dist_to_boid = (boid.pos - self.pos).magnitude()
+            weighted_acceleration = (boid.pos - self.pos) / dist_to_boid**2
+            weighted_acceleration *= self.max_acc
             if self.class_id != boid.class_id:
-                if DO_NOT_SEPARATE_THRESHOLD ** 2 < dist_to_boid_sq:
-                    t = REPELL_ENEMIES_COEF / math.sqrt(dist_to_boid_sq)
-                    acc = (boid.pos - self.pos).normalize() * self.max_acc
-                    self.acc -= acc * t # repell enemies
+                self.acc -= weighted_acceleration * REPELL_ENEMIES_COEF # repell enemies
                 continue
-            center_of_mass += boid.pos
-            count += 1
-            if DO_NOT_SEPARATE_THRESHOLD ** 2 < dist_to_boid_sq < self.separation ** 2:
-                t = REPELL_FRIENDS_COEF / math.sqrt(dist_to_boid_sq)
-                acc = (boid.pos - self.pos).normalize() * self.max_acc
+            center_of_mass += boid.pos; count += 1
+            if dist_to_boid < self.separation:
                 if self.rule_flags.SEPARATE:
-                    self.acc -= acc * t # SEPARATE
-            elif dist_to_boid_sq < self.alignment ** 2:
-                align_accumulate_vel += boid.vel
-                count_align += 1
+                    self.acc -= weighted_acceleration * REPELL_FRIENDS_COEF # SEPARATE
+            elif dist_to_boid < self.alignment:
+                align_accumulate_vel += boid.vel; count_align += 1
         if count_align:
             align_accumulate_vel /= count_align
             if self.rule_flags.ALIGN:

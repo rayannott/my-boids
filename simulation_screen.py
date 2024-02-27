@@ -1,12 +1,16 @@
+import math
+import random
+
 import pygame
 
 from screen import Screen
 from render_manager import RenderManager
 from boids import EdgeBehavior, FollowRules
 from simulation import Simulation
+from utils import current_mouse_position, random_unit_vector
 
 
-N_CLASSES = 2
+N_CLASSES = 4
 
 
 class SimulationScreen(Screen):
@@ -35,13 +39,16 @@ class SimulationScreen(Screen):
 
     def process_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 4:
-                self.simulation.speed_up_factor += 0.05
-            elif event.button == 5:
-                self.simulation.speed_up_factor -= 0.05
-            print(f'speedup: {self.simulation.speed_up_factor:.2f}')
+            if event.button in {4, 5}:
+                self.simulation.speed_up_factor += 0.05 * (1 if event.button == 4 else -1)
+                print(f'speedup: {self.simulation.speed_up_factor:.2f}')
+            elif event.button == 1:
+                for boid in self.simulation.get_neighbors_for_point(current_mouse_position(), 150):
+                    boid.vel = boid.vel.rotate_rad(random.random() * 2 * math.pi)
+                
         if event.type == pygame.KEYDOWN:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                # control follow rules:
                 if event.key == pygame.K_a:
                     self.follow_rules.ALIGN = not self.follow_rules.ALIGN
                     print('new follow rules:', self.follow_rules)

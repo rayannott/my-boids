@@ -2,14 +2,16 @@ import pygame
 from pygame import Color
 
 from simulation import Simulation
-from gui_utils import ColorGradient, LIGHT_PURPLE, LIGHT_GREEN, LIGHT_YELLOW
+from gui_utils import ColorGradient, LIGHT_PURPLE, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_RED
 
-COLOR_LIST = [LIGHT_GREEN, LIGHT_PURPLE, LIGHT_YELLOW]
+COLOR_LIST = [LIGHT_GREEN, LIGHT_PURPLE, LIGHT_YELLOW, LIGHT_RED]
 
 
 WHITE = Color('white')
 PURPLE_TO_GREEN = ColorGradient(LIGHT_PURPLE, LIGHT_GREEN)
 
+H = 20
+A = 7
 
 class RenderManager:
     def __init__(self, 
@@ -21,7 +23,7 @@ class RenderManager:
 
     
     def render(self):
-        h = 20; a = 7
+        
         for boid in self.simulation.boids:
             # color = PURPLE_TO_GREEN(boid.vel.magnitude() / boid.max_speed)
             # color = PURPLE_TO_GREEN(boid.last_num_of_neighbors / 10)
@@ -35,9 +37,9 @@ class RenderManager:
                 color,
                 [
                     boid.pos,
-                    boid.pos + vel_normalized_orth_plus * a,
-                    boid.pos + vel_normalized * h,
-                    boid.pos + vel_normalized_orth_minus * a,
+                    boid.pos + vel_normalized_orth_plus * A,
+                    boid.pos + vel_normalized * H,
+                    boid.pos + vel_normalized_orth_minus * A,
                 ]
             )
     
