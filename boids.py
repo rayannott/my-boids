@@ -60,7 +60,7 @@ class Boid:
     cohesion: float = COHESION # distance at which the boid will start to move towards other boids
     rule_flags: FollowRules = field(default_factory=FollowRules)
 
-    class_id: int = 0
+    class_id: int = 0 # determines the friend class of the boid
 
     edge_behavior: EdgeBehavior = EdgeBehavior.WRAP
 
@@ -69,7 +69,7 @@ class Boid:
 
     def update(self, time_delta: float):
         self.vel += self.acc * time_delta
-        # self.vel = self.vel.normalize() * min(self.vel.magnitude(), self.max_speed)
+        self.vel = self.vel.normalize() * min(self.vel.magnitude(), self.max_speed)
         self.pos += self.vel * time_delta
         self.acc *= 0.
     
@@ -104,9 +104,12 @@ class Boid:
                 self.acc += Vector2(0, -ACC_MAGNITUDE)
     
     def get_steering_acc(self, pos: Vector2) -> Vector2:
-        desired = (pos - self.pos)
+        desired = pos - self.pos
+        if not desired.magnitude_squared():
+            return Vector2()
         desired.scale_to_length(self.max_speed)
         steering = desired - self.vel
+        if not steering.magnitude_squared(): return Vector2()
         steering.scale_to_length(self.max_acc)
         return steering
 
