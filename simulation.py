@@ -21,6 +21,9 @@ class Simulation:
     def add_boid(self, boid: Boid):
         self.boids.append(boid)
     
+    def iterate_boids(self) -> Iterator[Boid]:
+        return (b for b in self.boids)
+    
     def add_object(self, obj):
         self.stationary_objects.append(obj)
     
@@ -69,6 +72,9 @@ class Simulation:
         
         # Update objects
         self.update_objects(time_delta)
+
+        # remove dead objects
+        self.stationary_objects = list(self.iterate_stationary_objects())
         
     def get_neighbors_for_all_boids(self) -> list[Iterator[Boid]]:
         neighbors: Iterator[Iterator[int]] = self.boids_tree.query_ball_point(

@@ -86,11 +86,12 @@ class Boid:
             elif self.pos.y > screen_rect.bottom:
                 self.pos.y = screen_rect.top
         elif self.edge_behavior == EdgeBehavior.BOUNCE:
+            # TODO: fix getting stuck in the edges
             if self.pos.x < screen_rect.left or self.pos.x > screen_rect.right:
-                self.vel.x *= -1 
+                self.vel.x *= -1
             if self.pos.y < screen_rect.top or self.pos.y > screen_rect.bottom:
                 self.vel.y *= -1
-            self.pos += self.vel
+            # self.pos += self.vel
         elif self.edge_behavior == EdgeBehavior.AVOID:
             # raise NotImplementedError('EdgeBehavior.AVOID')
             MARGIN = 150; ACC_MAGNITUDE = MAX_ACC * 3
@@ -105,19 +106,19 @@ class Boid:
     
     def get_steering_acc(self, pos: Vector2) -> Vector2:
         desired = pos - self.pos
-        if not desired.magnitude_squared():
-            return Vector2()
-        desired.scale_to_length(self.max_speed)
-        steering = desired - self.vel
+        if not desired.magnitude_squared(): return Vector2()
+        steering = desired.normalize() * self.max_speed - self.vel
         if not steering.magnitude_squared(): return Vector2()
-        steering.scale_to_length(self.max_acc)
-        return steering
+        return steering.normalize() * self.max_acc
 
     def steer(self, pos: Vector2):
         self.acc += self.get_steering_acc(pos)
     
     def avoid(self, pos: Vector2):
         self.acc -= self.get_steering_acc(pos)
+    
+    def accelerate_towards(self, pos: Vector2, magnitude: float = MAX_ACC):
+        self.acc += (pos - self.pos).normalize() * magnitude
 
     def align_cohere_separate(self, boids: Iterable['Boid']):
         center_of_mass, count = Vector2(), 0

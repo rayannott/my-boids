@@ -18,7 +18,7 @@ class SimulationScreen(Screen):
     def __init__(self, surface: pygame.Surface):
         self.simulation = Simulation(surface.get_rect())
         self.simulation.add_n_random_boids(
-            n=100, 
+            n=400,
             n_classes=N_CLASSES,
             edge_behavior=EdgeBehavior.WRAP
         )
@@ -29,14 +29,22 @@ class SimulationScreen(Screen):
 
         self.render_manager = RenderManager(self.simulation, self.surface)
 
+        self.mouse_cursor_attractive = False
+
     def update(self, time_delta: float):
         if not self.paused:
             self.simulation.update(time_delta)
+            cp = current_mouse_position()
+            if self.mouse_cursor_attractive:
+                for boid in self.simulation.get_neighbors_for_point(cp, 150):
+                    boid.accelerate_towards(cp, 400)
         self.render()
         return super().update(time_delta)
 
     def render(self):
         self.render_manager.render()
+        if self.mouse_cursor_attractive:
+            pygame.draw.circle(self.surface, (100, 0, 0), current_mouse_position(), 150, 1)
 
     def process_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -46,6 +54,13 @@ class SimulationScreen(Screen):
             elif event.button == 1:
                 for boid in self.simulation.get_neighbors_for_point(current_mouse_position(), 150):
                     boid.vel = boid.vel.rotate_rad(random.random() * 2 * math.pi)
+            elif event.button == 2:
+                self.simulation.speed_up_factor = 1.
+                print(f'speedup: {self.simulation.speed_up_factor:.2f}')
+            elif event.button == 3:
+                for obj in self.simulation.iterate_stationary_objects():
+                    if obj.pos.distance_to(current_mouse_position()) < obj.radius:
+                        obj.kill()
                 
         if event.type == pygame.KEYDOWN:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
@@ -65,6 +80,8 @@ class SimulationScreen(Screen):
                     self.paused = not self.paused
                 elif event.key == pygame.K_SPACE:
                     self.simulation.add_n_random_boids(10, n_classes=N_CLASSES)
+                elif event.key == pygame.K_a:
+                    self.mouse_cursor_attractive = not self.mouse_cursor_attractive
                 elif event.key == pygame.K_f:
                     self.simulation.add_object(Food(current_mouse_position(), 10))
                 elif event.key == pygame.K_o:
