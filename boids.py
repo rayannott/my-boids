@@ -21,7 +21,6 @@ SEPARATION = 30
 ALIGNMENT = 60
 COHESION = 80
 PERCEPTION = 90
-PERCEPTION_ANGLE = 2 * math.pi / 3
 
 REPELL_FRIENDS_COEF = 8.
 REPELL_ENEMIES_COEF = 30.
@@ -45,7 +44,7 @@ class GeneSequence:
     ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Boid:
     pos: Vector2
     vel: Vector2 = field(default_factory=random_vector)
@@ -53,19 +52,17 @@ class Boid:
     max_speed: float = MAX_SPEED
     max_acc: float = MAX_ACC
     perception: float = PERCEPTION # neighborhood: radius of the circle that defines the boid's perception
-    perception_angle: float = PERCEPTION_ANGLE # neighborhood: half of the angle of the disk sector that defines the boid's perception
 
     separation: float = SEPARATION # distance at which the boid will start to avoid other boids
     alignment: float = ALIGNMENT # distance at which the boid will start to align with other boids
     cohesion: float = COHESION # distance at which the boid will start to move towards other boids
-    rule_flags: FollowRules = field(default_factory=FollowRules)
-
-    class_id: int = 0
 
     edge_behavior: EdgeBehavior = EdgeBehavior.WRAP
 
-    def __post_init__(self):
-        self.last_num_of_neighbors = 0
+    class_id: int = 0
+    rule_flags: FollowRules = field(default_factory=FollowRules, init=False)
+    last_num_of_neighbors: int = field(default=0, init=False)
+    score: int = field(default=0, init=False)
 
     def update(self, time_delta: float):
         self.vel += self.acc * time_delta

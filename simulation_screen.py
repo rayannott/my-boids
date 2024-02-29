@@ -6,8 +6,9 @@ import pygame
 from screen import Screen
 from render_manager import RenderManager
 from boids import EdgeBehavior, FollowRules
+from objects import Food, Obstacle
 from simulation import Simulation
-from utils import current_mouse_position, random_unit_vector
+from utils import current_mouse_position
 
 
 N_CLASSES = 4
@@ -17,7 +18,7 @@ class SimulationScreen(Screen):
     def __init__(self, surface: pygame.Surface):
         self.simulation = Simulation(surface.get_rect())
         self.simulation.add_n_random_boids(
-            n=400, 
+            n=100, 
             n_classes=N_CLASSES,
             edge_behavior=EdgeBehavior.WRAP
         )
@@ -64,4 +65,9 @@ class SimulationScreen(Screen):
                     self.paused = not self.paused
                 elif event.key == pygame.K_SPACE:
                     self.simulation.add_n_random_boids(10, n_classes=N_CLASSES)
+                elif event.key == pygame.K_f:
+                    self.simulation.add_object(Food(current_mouse_position(), 10))
+                elif event.key == pygame.K_o:
+                    self.simulation.add_object(Obstacle(current_mouse_position(), 20, 100))
+
     
