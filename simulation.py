@@ -79,7 +79,7 @@ class Simulation:
         return [
             (
                 self.boids[i] for i in neighbor
-                # add if within perception angle
+                # if (self.boids[i].pos - self.boids[boid_id].pos).dot(self.boids[boid_id].vel) > 0
             )
             for boid_id, neighbor in enumerate(neighbors)
         ]
