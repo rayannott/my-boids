@@ -6,8 +6,7 @@ import pygame
 
 def random_screen_position(rect: Rect) -> Vector2:
     return Vector2(
-        random.uniform(rect.left, rect.right),
-        random.uniform(rect.top, rect.bottom)
+        random.uniform(rect.left, rect.right), random.uniform(rect.top, rect.bottom)
     )
 
 

@@ -12,11 +12,12 @@ class ObjectType(Enum):
 
 
 class StationaryObject(ABC):
-    def __init__(self,
+    def __init__(
+        self,
         pos: Vector2,
         type: ObjectType,
         radius: float,
-        effect_radius: float
+        effect_radius: float,
         # lifetime: float = float('inf')
     ):
         self.pos = pos
@@ -25,7 +26,7 @@ class StationaryObject(ABC):
         self.effect_radius = effect_radius
         self.alive = True
         # self.lifetime = lifetime
-    
+
     @abstractmethod
     def update(self, time_delta: float):
         pass
@@ -39,9 +40,9 @@ class StationaryObject(ABC):
 
 
 class Food(StationaryObject):
-    def __init__(self, pos: Vector2, radius: float = 10., effect_radius: float = 50.):
+    def __init__(self, pos: Vector2, radius: float = 10.0, effect_radius: float = 50.0):
         super().__init__(pos, ObjectType.FOOD, radius, effect_radius)
-    
+
     def update(self, time_delta: float):
         pass
 
@@ -53,13 +54,12 @@ class Food(StationaryObject):
 
 
 class Obstacle(StationaryObject):
-    def __init__(self, pos: Vector2, radius: float = 10., effect_radius: float = 50.):
+    def __init__(self, pos: Vector2, radius: float = 10.0, effect_radius: float = 50.0):
         super().__init__(pos, ObjectType.OBSTACLE, radius, effect_radius)
-    
+
     def update(self, time_delta: float):
         pass
 
     def apply_effect_to_boid(self, boid: Boid):
         # boid.avoid(self.pos)
         boid.acc += (boid.pos - self.pos).normalize() * 600
-    

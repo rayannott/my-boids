@@ -18,9 +18,7 @@ class SimulationScreen(Screen):
     def __init__(self, surface: pygame.Surface):
         self.simulation = Simulation(surface.get_rect())
         self.simulation.add_n_random_boids(
-            n=400,
-            n_classes=N_CLASSES,
-            edge_behavior=EdgeBehavior.WRAP
+            n=400, n_classes=N_CLASSES, edge_behavior=EdgeBehavior.WRAP
         )
         super().__init__(surface)
         self.follow_rules = FollowRules()
@@ -39,41 +37,46 @@ class SimulationScreen(Screen):
                 for boid in self.simulation.get_neighbors_for_point(cp, 150):
                     boid.accelerate_towards(cp, 400)
         self.render()
-        return super().update(time_delta)
 
     def render(self):
         self.render_manager.render()
         if self.mouse_cursor_attractive:
-            pygame.draw.circle(self.surface, (100, 0, 0), current_mouse_position(), 150, 1)
+            pygame.draw.circle(
+                self.surface, (100, 0, 0), current_mouse_position(), 150, 1
+            )
 
     def process_event(self, event: pygame.event.Event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button in {4, 5}:
-                self.simulation.speed_up_factor += 0.05 * (1 if event.button == 4 else -1)
-                print(f'speedup: {self.simulation.speed_up_factor:.2f}')
+                self.simulation.speed_up_factor += 0.05 * (
+                    1 if event.button == 4 else -1
+                )
+                print(f"speedup: {self.simulation.speed_up_factor:.2f}")
             elif event.button == 1:
-                for boid in self.simulation.get_neighbors_for_point(current_mouse_position(), 150):
+                for boid in self.simulation.get_neighbors_for_point(
+                    current_mouse_position(), 150
+                ):
                     boid.vel = boid.vel.rotate_rad(random.random() * 2 * math.pi)
             elif event.button == 2:
-                self.simulation.speed_up_factor = 1.
-                print(f'speedup: {self.simulation.speed_up_factor:.2f}')
+                self.simulation.speed_up_factor = 1.0
+                print(f"speedup: {self.simulation.speed_up_factor:.2f}")
             elif event.button == 3:
                 for obj in self.simulation.iterate_stationary_objects():
                     if obj.pos.distance_to(current_mouse_position()) < obj.radius:
                         obj.kill()
-                
+
         if event.type == pygame.KEYDOWN:
             if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                 # control follow rules:
                 if event.key == pygame.K_a:
                     self.follow_rules.ALIGN = not self.follow_rules.ALIGN
-                    print('new follow rules:', self.follow_rules)
+                    print("new follow rules:", self.follow_rules)
                 elif event.key == pygame.K_c:
                     self.follow_rules.COHERE = not self.follow_rules.COHERE
-                    print('new follow rules:', self.follow_rules)
+                    print("new follow rules:", self.follow_rules)
                 elif event.key == pygame.K_s:
                     self.follow_rules.SEPARATE = not self.follow_rules.SEPARATE
-                    print('new follow rules:', self.follow_rules)
+                    print("new follow rules:", self.follow_rules)
                 self.simulation.update_follow_rules(self.follow_rules)
             else:
                 if event.key == pygame.K_p:
@@ -85,6 +88,6 @@ class SimulationScreen(Screen):
                 elif event.key == pygame.K_f:
                     self.simulation.add_object(Food(current_mouse_position(), 10))
                 elif event.key == pygame.K_o:
-                    self.simulation.add_object(Obstacle(current_mouse_position(), 20, 100))
-
-    
+                    self.simulation.add_object(
+                        Obstacle(current_mouse_position(), 20, 100)
+                    )

@@ -1,6 +1,4 @@
-from statistics import mean, stdev
 from collections import defaultdict
-from typing import Any
 from dataclasses import dataclass, field
 
 from simulation import Simulation
@@ -13,6 +11,7 @@ class Stats:
 
     directions: velocity angle with respect to the x-axis (grouped by class_id)
     """
+
     directions: list[defaultdict[int, list[float]]] = field(default_factory=list)
     speeds: list[defaultdict[int, list[float]]] = field(default_factory=list)
 
@@ -29,13 +28,14 @@ class StatsManager:
         self.simulation = simulation
 
         self.stats = Stats()
-        
+
     def update(self):
         _direction = defaultdict(list)
         _speed = defaultdict(list)
         for boid in self.simulation.iterate_boids():
-            _direction[boid.class_id].append(boid.vel.as_polar()[1]) # could do math instead, but the performance difference is negligible
+            _direction[boid.class_id].append(
+                boid.vel.as_polar()[1]
+            )  # could do math instead, but the performance difference is negligible
             _speed[boid.class_id].append(boid.vel.magnitude())
         self.stats.directions.append(_direction)
-        self.stats.speeds.append(_speed) 
-    
+        self.stats.speeds.append(_speed)

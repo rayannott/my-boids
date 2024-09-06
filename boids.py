@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-import math, random
+import random
 from enum import Enum, auto
 from typing import Iterable
 
@@ -22,15 +22,15 @@ ALIGNMENT = 60
 COHESION = 80
 PERCEPTION = 90
 
-REPELL_FRIENDS_COEF = 8.
-REPELL_ENEMIES_COEF = 30.
+REPELL_FRIENDS_COEF = 8.0
+REPELL_ENEMIES_COEF = 30.0
 
 
 class EdgeBehavior(Enum):
     WRAP = auto()
     BOUNCE = auto()
     IGNORE = auto()
-    AVOID = auto() # steer away from the edge when too close
+    AVOID = auto()  # steer away from the edge when too close
 
 
 @dataclass
@@ -40,8 +40,7 @@ class FollowRules:
     SEPARATE: bool = True
 
 
-class GeneSequence:
-    ...
+class GeneSequence: ...
 
 
 @dataclass(slots=True)
@@ -51,14 +50,20 @@ class Boid:
     acc: Vector2 = field(default_factory=Vector2)
     max_speed: float = MAX_SPEED
     max_acc: float = MAX_ACC
-    perception: float = PERCEPTION # neighborhood: radius of the circle that defines the boid's perception
+    perception: float = PERCEPTION  # neighborhood: radius of the circle that defines the boid's perception
 
-    separation: float = SEPARATION # distance at which the boid will start to avoid other boids
-    alignment: float = ALIGNMENT # distance at which the boid will start to align with other boids
-    cohesion: float = COHESION # distance at which the boid will start to move towards other boids
+    separation: float = (
+        SEPARATION  # distance at which the boid will start to avoid other boids
+    )
+    alignment: float = (
+        ALIGNMENT  # distance at which the boid will start to align with other boids
+    )
+    cohesion: float = (
+        COHESION  # distance at which the boid will start to move towards other boids
+    )
     rule_flags: FollowRules = field(default_factory=FollowRules)
 
-    class_id: int = 0 # determines the friend class of the boid
+    class_id: int = 0  # determines the friend class of the boid
 
     edge_behavior: EdgeBehavior = EdgeBehavior.WRAP
 
@@ -71,8 +76,8 @@ class Boid:
         self.vel += self.acc * time_delta
         self.vel = self.vel.normalize() * min(self.vel.magnitude(), self.max_speed)
         self.pos += self.vel * time_delta
-        self.acc *= 0.
-    
+        self.acc *= 0.0
+
     def check_edges(self, screen_rect: Rect):
         if self.edge_behavior == EdgeBehavior.IGNORE:
             return
@@ -94,7 +99,8 @@ class Boid:
             # self.pos += self.vel
         elif self.edge_behavior == EdgeBehavior.AVOID:
             # raise NotImplementedError('EdgeBehavior.AVOID')
-            MARGIN = 150; ACC_MAGNITUDE = MAX_ACC * 3
+            MARGIN = 150
+            ACC_MAGNITUDE = MAX_ACC * 3
             if self.pos.x < screen_rect.left + MARGIN:
                 self.acc += Vector2(ACC_MAGNITUDE, 0)
             elif self.pos.x > screen_rect.right - MARGIN:
@@ -103,54 +109,60 @@ class Boid:
                 self.acc += Vector2(0, ACC_MAGNITUDE)
             elif self.pos.y > screen_rect.bottom - MARGIN:
                 self.acc += Vector2(0, -ACC_MAGNITUDE)
-    
+
     def get_steering_acc(self, pos: Vector2) -> Vector2:
         desired = pos - self.pos
-        if not desired.magnitude_squared(): return Vector2()
+        if not desired.magnitude_squared():
+            return Vector2()
         steering = desired.normalize() * self.max_speed - self.vel
-        if not steering.magnitude_squared(): return Vector2()
+        if not steering.magnitude_squared():
+            return Vector2()
         return steering.normalize() * self.max_acc
 
     def steer(self, pos: Vector2):
         self.acc += self.get_steering_acc(pos)
-    
+
     def avoid(self, pos: Vector2):
         self.acc -= self.get_steering_acc(pos)
-    
+
     def accelerate_towards(self, pos: Vector2, magnitude: float = MAX_ACC):
         self.acc += (pos - self.pos).normalize() * magnitude
 
-    def align_cohere_separate(self, boids: Iterable['Boid']):
+    def align_cohere_separate(self, boids: Iterable["Boid"]):
         center_of_mass, count = Vector2(), 0
         align_accumulate_vel, count_align = Vector2(), 0
         for boid in boids:
-            if boid is self: continue
+            if boid is self:
+                continue
             dist_to_boid = (boid.pos - self.pos).magnitude()
             weighted_acceleration = (boid.pos - self.pos) / dist_to_boid**2
             weighted_acceleration *= self.max_acc
             if self.class_id != boid.class_id:
-                self.acc -= weighted_acceleration * REPELL_ENEMIES_COEF # repell enemies
+                self.acc -= (
+                    weighted_acceleration * REPELL_ENEMIES_COEF
+                )  # repell enemies
                 continue
-            center_of_mass += boid.pos; count += 1
+            center_of_mass += boid.pos
+            count += 1
             if dist_to_boid < self.separation:
                 if self.rule_flags.SEPARATE:
-                    self.acc -= weighted_acceleration * REPELL_FRIENDS_COEF # SEPARATE
+                    self.acc -= weighted_acceleration * REPELL_FRIENDS_COEF  # SEPARATE
             elif dist_to_boid < self.alignment:
-                align_accumulate_vel += boid.vel; count_align += 1
+                align_accumulate_vel += boid.vel
+                count_align += 1
         if count_align:
             align_accumulate_vel /= count_align
             if self.rule_flags.ALIGN:
-                self.steer(self.pos + align_accumulate_vel) # ALIGN
+                self.steer(self.pos + align_accumulate_vel)  # ALIGN
         if count:
             # this is the cohesion part
             center_of_mass /= count
             dist_to_com_sq = (center_of_mass - self.pos).magnitude_squared()
-            if dist_to_com_sq < self.cohesion ** 2:
+            if dist_to_com_sq < self.cohesion**2:
                 if self.rule_flags.COHERE:
-                    self.steer(center_of_mass) # COHERE
+                    self.steer(center_of_mass)  # COHERE
         self.last_num_of_neighbors = count
-    
+
     def wander(self):
         # TODO: implement this
         ...
-    
